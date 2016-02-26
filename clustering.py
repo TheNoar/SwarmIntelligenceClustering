@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 # constants?
-kd = 0.1
+kd = 0.9
 kp = 0.6
 
 threshold = 20
@@ -55,19 +55,25 @@ def f3(pile,xV):
 	if pile.count == 0:
 		return 1
 	difsum = np.linalg.norm(xV - pile.sumvecter/pile.count)
+	# print str(difsum) + ":" + str(pile.count)
 
-	# for v in pile.vecterlist:
-	# 	dif = abs(v - xV)
-	# 	difsum += sum(dif)
-	# avrdif = difsum/pile.count
+	return 1.0 - (difsum/16.0)
 
-	return difsum
+def f4(pile,xV):
+
+	for v in pile.vecterlist:
+		dif = abs(v - xV)
+		difsum += sum(dif)
+	avrdif = difsum/pile.count
+
+	return avrdif
 
 def drop(pile, vector, func):
 	fx = func(pile, vector)
+	
 	choice = rand.random()
-	if fx > kd:
-		if 2*fx < choice:
+	if fx < kd:
+		if 2*fx > choice:
 			pile.add(vector)
 			return True
 		else:
@@ -80,11 +86,12 @@ def drop(pile, vector, func):
 def pickup(pile, index, func):
 	vec = pile.vecterlist[index]
 	fx = func(pile, vec)
+
 	choice = rand.random()
 
 	prob = (kp/(kp+fx))**2
 
-	if choice > prob:
+	if choice < prob:
 		vec = pile.remove(index)
 		return vec, True
 	else:
@@ -104,7 +111,8 @@ def main():
 		data = line.rstrip('\r\n').split(' ')
 		data = map(float,data[0:256])
 		vec = np.array(data)
-		piles[count%10].add(vec)
+		index = rand.randint(0,9)
+		piles[index].add(vec)
 		# p = pile()
 		# p.add(vec)
 		count+=1
@@ -119,21 +127,22 @@ def main():
 	hands = 0
 	# while(running):
 	print "here"
-	for q in xrange(500000):
+	for q in xrange(5000000):
 		indexp = rand.randint(0,9)
 		# print q
-		if(holding):
-			done = drop(piles[indexp],hands, func)
-			if(done):
-				holding = False
-
-		else:
-			indexv = 0
-			if(piles[indexp].count>1):
-				indexv = rand.randint(0,piles[indexp].count-1)
-			elif(piles[indexp].count == 0):
-				continue
-			hands, holding = pickup(piles[indexp],indexv,func)
+		# if(holding):
+		done = drop(piles[indexp],hands, func)
+		
+		if(done):
+			holding = False
+			while not holding: 
+		# else:
+				indexv = 0
+				if(piles[indexp].count>1):
+					indexv = rand.randint(0,piles[indexp].count-1)
+				else:
+					continue
+				hands, holding = pickup(piles[indexp],indexv,func)
 
 			# if(done):
 			# 	holding = True
